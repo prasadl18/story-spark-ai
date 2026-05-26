@@ -200,6 +200,7 @@ useEffect(() => {
       {
         title: normalizedTitle,
         className: SELECTED_TOPIC_CLASSES,
+        color: SELECTED_TOPIC_CLASSES,
         selected: true,
       },
     ]);
