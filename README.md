@@ -28,9 +28,8 @@
 
 *Generate, explore, and share multiple story variations powered by OpenAI & Gemini.*
 
-<br/>
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-storysparkai.vercel.app-6c3ff7?style=for-the-badge&logoColor=white)](https://storysparkai.vercel.app/)
-&nbsp;
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-storyspark.ai-6c3ff7?style=for-the-badge&logoColor=white)](https://storyspark.ai/)
+
 [![License: MIT](https://img.shields.io/github/license/ronisarkarexe/story-spark-ai?style=for-the-badge&color=22c55e)](https://github.com/ronisarkarexe/story-spark-ai/blob/master/LICENSE)
 &nbsp;
 [![Forks](https://img.shields.io/github/forks/ronisarkarexe/story-spark-ai?style=for-the-badge&color=3b82f6)](https://github.com/ronisarkarexe/story-spark-ai/fork)
@@ -62,6 +61,7 @@
   - [Installation](#installation)
   - [Environment Variables](#environment-variables)
   - [Running Locally](#running-locally)
+- [Docker](#-docker)
 - [Deployment](#%EF%B8%8F-deployment-vercel)
 - [Contributing](#-contributing)
 - [Contributors](#-contributors)
@@ -76,7 +76,9 @@
 
 Whether you're a writer battling creative block, an educator exploring narrative structure, or simply someone who loves stories — StorySpark AI is your intelligent storytelling companion.
 
-> 🌐 **Live at:** [storysparkai.vercel.app](https://storysparkai.vercel.app/)
+> 🌐 **Live at:** [storyspark.ai](https://storyspark.ai/)
+
+
 
 ---
 
@@ -270,15 +272,82 @@ npm run start:frontend   # serves built static app (preview)
 
 ---
 
+## 🐳 Docker
+
+The repository includes a full Docker setup for consistent local development and deployment.
+
+### Files added
+
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `frontend/nginx.conf`
+- `.dockerignore`
+- `docker-compose.yml`
+
+### Docker build
+
+Build the backend image:
+
+```bash
+docker build -f backend/Dockerfile .
+```
+
+Build the frontend image with the API base URL baked into the Vite app:
+
+```bash
+docker build \
+  --build-arg VITE_BASE_URL=/api/v1 \
+  --build-arg VITE_SOCKET_URL=http://localhost:4001 \
+  -f frontend/Dockerfile .
+```
+
+### Docker Compose
+
+Start the full stack:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- Frontend on [http://localhost:4001](http://localhost:4001)
+- Backend on [http://localhost:5000](http://localhost:5000)
+- MongoDB is internal to the Docker network only
+
+### Environment setup for Docker
+
+The compose file provides sensible defaults for local development, but you can override them through your shell or a local `.env` file when needed.
+
+Key Docker environment values:
+
+- `DATABASE_URL=mongodb://mongodb:27017/story_spark_ai`
+- `CORS_ORIGINS=http://localhost:4001`
+- `VITE_BASE_URL=/api/v1`
+- `VITE_SOCKET_URL=http://localhost:4001`
+- `JWT_SECRET`
+- `JWT_REFRESH_SECRET`
+- `DEFAULT_ADMIN_PASSWORD`
+- AI keys and email credentials such as `OPEN_AI_KEY`, `GEMINI_API_KEY`, `VERIFY_EMAIL`, and `VERIFY_PASSWORD`
+
+Provide the secret values through your shell environment or a local `.env` file before running Compose.
+
+### Notes
+
+- The frontend container serves the production Vite build through nginx.
+- nginx proxies `/api/v1` and `/socket.io` to the backend service by name inside the Docker network.
+- Docker Compose uses service-name networking for backend-to-MongoDB communication, so there is no hardcoded localhost dependency between containers.
+
+---
+
 ## ☁️ Deployment (Vercel)
 
 This monorepo deploys as **two separate Vercel projects**:
 
 | Project | Root Directory | Example Domain |
 |---|---|---|
-| 🖥️ Frontend | `frontend` | `storysparkai.vercel.app` |
-| ⚙️ Backend API | `backend` | `apistorysparkai.vercel.app` |
-
+| 🖥️ Frontend | `frontend` | `storyspark.ai` |
+| ⚙️ Backend API | `backend` | `api.storyspark.ai` |
 **Frontend environment variables** *(set in Vercel dashboard → redeploy after changes)*:
 
 ```env

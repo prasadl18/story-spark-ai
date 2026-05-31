@@ -25,6 +25,7 @@ type FormData = {
 };
 
 type FormField = "fullname" | "email" | "subject" | "message";
+type FormErrors = Partial<Record<FormField, string>>;
 
 const INITIAL_FORM_DATA: FormData = {
   fullname: "",
@@ -86,35 +87,77 @@ const FORM_FIELDS = [
 
 export default function Contact() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const isSubmittingRef = useRef(false);
+
+  const validateField = (field: FormField, value: string): string => {
+    const trimmedValue = value.trim();
+
+    switch (field) {
+      case "fullname":
+        return trimmedValue ? "" : "Please enter your full name.";
+      case "email":
+        if (!trimmedValue) return "Please enter your email address.";
+        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmedValue)
+          ? ""
+          : "Please enter a valid email address.";
+      case "subject":
+        return trimmedValue ? "" : "Please add a subject for your message.";
+      case "message":
+        if (!trimmedValue) return "Please write a short message.";
+        return trimmedValue.length < 12
+          ? "Please share a little more detail."
+          : "";
+      default:
+        return "";
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const nextErrors: FormErrors = {
+      fullname: validateField("fullname", formData.fullname),
+      email: validateField("email", formData.email),
+      subject: validateField("subject", formData.subject),
+      message: validateField("message", formData.message),
+    };
+
+    const hasErrors = Object.values(nextErrors).some(Boolean);
+    setFieldErrors(nextErrors);
+
+    if (hasErrors) {
+      setError("Please fix the highlighted fields and try again.");
+      return false;
+    }
+
+    return true;
+  };
 
   const changeHandler = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ): void => {
     const fieldName = e.target.name as FormField;
     setFormData((prev) => ({ ...prev, [fieldName]: e.target.value }));
+    setFieldErrors((prev) => {
+      if (!prev[fieldName]) return prev;
+      const nextErrors = { ...prev };
+      delete nextErrors[fieldName];
+      return nextErrors;
+    });
     if (error) setError("");
   };
 
-  const validateForm = (): boolean => {
-    const t = {
-      fullname: formData.fullname.trim(),
-      email: formData.email.trim(),
-      subject: formData.subject.trim(),
-      message: formData.message.trim(),
-    };
-    if (!t.fullname || !t.email || !t.subject || !t.message) {
-      setError("All fields are required.");
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(t.email)) {
-      setError("Please enter a valid email address.");
-      return false;
-    }
-    return true;
+  const blurHandler = (
+    field: FormField,
+    value: string,
+  ): void => {
+    const nextError = validateField(field, value);
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: nextError,
+    }));
   };
 
   const submitHandler = async (
@@ -157,7 +200,7 @@ export default function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="contact-section relative overflow-hidden bg-[#020617] text-white"
+      className="contact-section relative overflow-hidden transition-colors duration-300"
     >
       {/* ── Layered background ── */}
       <div aria-hidden="true" className="contact-bg-mesh" />
@@ -171,7 +214,7 @@ export default function Contact() {
 
         {/* Mobile badge */}
         <div className="mb-10 flex flex-col items-center text-center lg:hidden">
-          <span className="contact-badge inline-flex items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-300">
+          <span className="contact-badge inline-flex items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-300">
             <Zap className="h-3 w-3" aria-hidden="true" />
             Get in Touch
           </span>
@@ -183,7 +226,7 @@ export default function Contact() {
           <div className="contact-col-left flex flex-col">
 
             {/* Desktop badge */}
-            <span className="contact-badge mb-6 hidden w-fit items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-300 lg:inline-flex">
+            <span className="contact-badge mb-6 hidden w-fit items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-300 lg:inline-flex">
               <Zap className="h-3 w-3" aria-hidden="true" />
               Get in Touch
             </span>
@@ -194,7 +237,7 @@ export default function Contact() {
               className="font-black leading-[0.9] tracking-tight"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              <span className="block text-[clamp(2.75rem,6vw,4.5rem)] text-white">
+              <span className="block text-[clamp(2.75rem,6vw,4.5rem)] text-slate-900 dark:text-white">
                 Let's Start a
               </span>
               <span className="contact-heading-gradient block text-[clamp(2.75rem,6vw,4.5rem)]">
@@ -206,7 +249,7 @@ export default function Contact() {
             <div aria-hidden="true" className="contact-accent-bar mt-5" />
 
             {/* Description */}
-            <p className="mt-6 max-w-[38ch] text-[0.9375rem] leading-[1.8] text-slate-400 sm:text-base">
+            <p className="mt-6 max-w-[38ch] text-[0.9375rem] leading-[1.8] text-slate-600 dark:text-slate-400 sm:text-base">
               Have a story idea, a feature suggestion, or just want to say
               hello? We read every message and respond within 24 hours.
             </p>
@@ -220,10 +263,10 @@ export default function Contact() {
               ].map(({ value, label }) => (
                 <div
                   key={label}
-                  className="contact-stat-card rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3 text-center sm:p-4"
+                  className="contact-stat-card rounded-2xl border border-slate-200 bg-white/75 p-3 text-center shadow-sm backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.03] sm:p-4"
                 >
-                  <p className="text-lg font-black text-white sm:text-xl">{value}</p>
-                  <p className="mt-0.5 text-[0.65rem] font-medium uppercase tracking-wider text-slate-500 sm:text-xs">
+                  <p className="text-lg font-black text-slate-900 dark:text-white sm:text-xl">{value}</p>
+                  <p className="mt-0.5 text-[0.65rem] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-500 sm:text-xs">
                     {label}
                   </p>
                 </div>
@@ -239,7 +282,7 @@ export default function Contact() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${label}: ${value}`}
-                    className={`contact-channel-link group flex items-center gap-3.5 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 backdrop-blur-sm ${hoverBorder}`}
+                    className={`contact-channel-link group flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white/75 px-4 py-3.5 shadow-sm backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.03] ${hoverBorder}`}
                   >
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${color} ${iconColor}`}>
                       <Icon className="h-4 w-4" aria-hidden="true" />
@@ -248,7 +291,7 @@ export default function Contact() {
                       <span className="block text-[0.65rem] font-bold uppercase tracking-widest text-slate-500">
                         {label}
                       </span>
-                      <span className="block truncate text-sm font-medium text-slate-300 group-hover:text-white">
+                      <span className="block truncate text-sm font-medium text-slate-700 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-white">
                         {value}
                       </span>
                     </span>
@@ -282,10 +325,10 @@ export default function Contact() {
 
                 {/* Form header */}
                 <div className="mb-7">
-                  <h2 className="text-xl font-bold text-white sm:text-2xl">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                     Send a Message
                   </h2>
-                  <p className="mt-1.5 text-sm text-slate-500">
+                  <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-500">
                     We'll get back to you within 24 hours.
                   </p>
                 </div>
@@ -301,14 +344,14 @@ export default function Contact() {
                     <div key={id} className="contact-field group">
                       <label
                         htmlFor={id}
-                        className="mb-1.5 block text-[0.7rem] font-bold uppercase tracking-widest text-slate-500"
+                        className="mb-1.5 block text-[0.7rem] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-500"
                       >
                         {label}
                       </label>
                       <div className="relative">
                         <Icon
                           aria-hidden="true"
-                          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 transition-colors duration-200 group-focus-within:text-purple-400"
+                          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 transition-colors duration-200 group-focus-within:text-purple-500 dark:text-slate-600 dark:group-focus-within:text-purple-400"
                         />
                         <input
                           id={id}
@@ -317,11 +360,19 @@ export default function Contact() {
                           placeholder={placeholder}
                           value={formData[name]}
                           onChange={changeHandler}
+                          onBlur={(event) => blurHandler(name, event.target.value)}
                           required
                           autoComplete={autoComplete}
-                          className="contact-input h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white placeholder:text-slate-600 sm:h-[3.125rem] sm:text-base"
+                          aria-invalid={Boolean(fieldErrors[name])}
+                          aria-describedby={fieldErrors[name] ? `${id}-error` : undefined}
+                          className="contact-input h-12 w-full rounded-xl pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 sm:h-[3.125rem] sm:text-base dark:text-white dark:placeholder:text-slate-500"
                         />
                       </div>
+                      {fieldErrors[name] && (
+                        <p id={`${id}-error`} className="contact-field-error mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                          {fieldErrors[name]}
+                        </p>
+                      )}
                     </div>
                   ))}
 
@@ -329,26 +380,34 @@ export default function Contact() {
                   <div className="contact-field group">
                     <label
                       htmlFor="contact-message"
-                      className="mb-1.5 block text-[0.7rem] font-bold uppercase tracking-widest text-slate-500"
+                      className="mb-1.5 block text-[0.7rem] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-500"
                     >
                       Message
                     </label>
                     <div className="relative">
                       <Pencil
                         aria-hidden="true"
-                        className="pointer-events-none absolute left-3.5 top-4 h-4 w-4 text-slate-600 transition-colors duration-200 group-focus-within:text-purple-400"
+                        className="pointer-events-none absolute left-3.5 top-4 h-4 w-4 text-slate-500 transition-colors duration-200 group-focus-within:text-purple-500 dark:text-slate-600 dark:group-focus-within:text-purple-400"
                       />
                       <textarea
                         id="contact-message"
-                        rows={5}
+                        rows={6}
                         name="message"
                         placeholder="Tell us what's on your mind…"
                         value={formData.message}
                         onChange={changeHandler}
+                        onBlur={(event) => blurHandler("message", event.target.value)}
                         required
-                        className="contact-input w-full resize-none rounded-xl pb-4 pl-10 pr-4 pt-4 text-sm text-white placeholder:text-slate-600 sm:text-base"
+                        aria-invalid={Boolean(fieldErrors.message)}
+                        aria-describedby={fieldErrors.message ? "contact-message-error" : undefined}
+                        className="contact-input w-full resize-none rounded-xl pb-4 pl-10 pr-4 pt-4 text-sm text-slate-900 placeholder:text-slate-400 sm:text-base dark:text-white dark:placeholder:text-slate-500"
                       />
                     </div>
+                    {fieldErrors.message && (
+                      <p id="contact-message-error" className="contact-field-error mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                        {fieldErrors.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Submit button */}
@@ -387,10 +446,10 @@ export default function Contact() {
                     <div
                       role="status"
                       aria-live="polite"
-                      className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-4 py-3.5"
+                      className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] px-4 py-3.5"
                     >
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                      <p className="text-sm font-medium text-emerald-400">
+                      <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
                         Message sent — we'll get back to you within 24 hours.
                       </p>
                     </div>
@@ -401,10 +460,10 @@ export default function Contact() {
                     <div
                       role="alert"
                       aria-live="assertive"
-                      className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.07] px-4 py-3.5"
+                      className="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.08] px-4 py-3.5"
                     >
-                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" aria-hidden="true" />
-                      <p className="text-sm font-medium text-red-400">{error}</p>
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400" aria-hidden="true" />
+                      <p className="text-sm font-medium text-rose-700 dark:text-rose-400">{error}</p>
                     </div>
                   )}
                 </form>
