@@ -3,14 +3,8 @@ import { useGetPostListsQuery } from "../../../redux/apis/post.api";
 import { useDebounced } from "../../../hooks/global";
 import { Topic } from "../../../models/post";
 import PaginationComponent from "../../pagination/pagination.component";
-
-interface FilterStats {
-  total: number;
-  published: number;
-  drafts: number;
-  featured: number;
-}
-
+import ImageFallback from "../../ImageFallback";
+ImageFallback
 const PostListsComponent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [size, setSize] = useState<number>(10);
@@ -346,9 +340,9 @@ const PostListsComponent: React.FC = () => {
                     <div className="flex items-center">
                       {post.imageURL && (
                         <div className="flex-shrink-0 h-11 w-11 mr-4 relative">
-                          <img
+                          <ImageFallback
                             className="h-11 w-11 rounded-lg object-cover shadow-md ring-1 ring-white/10"
-                            src={post.imageURL}
+                            src="broken-url"
                             alt={post.title}
                           />
                         </div>
@@ -366,9 +360,6 @@ const PostListsComponent: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-200">
                       {post.author?.name || 'Unknown User'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {post.author?.email || 'N/A'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
