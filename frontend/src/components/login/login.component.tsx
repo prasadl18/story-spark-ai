@@ -186,7 +186,7 @@ const LoginComponent = () => {
           <div className="absolute inset-0 bg-black/60"></div>
 
           <form
-            className="space-y-5"
+            className="space-y-5 w-full"
             onSubmit={handleSubmit(onSubmit)}
             >
 
