@@ -26,6 +26,7 @@ const SSInput = <T extends FieldValues>({
   name,
   type = "text",
   placeholder,
+  required,
   icon,
   register,
   validation,
@@ -35,26 +36,21 @@ const SSInput = <T extends FieldValues>({
 }: SSInputProps<T>) => {
   const [showPassword, setShowPassword] = useState(false);
 
-
-
   const inputType =
-
     type === "password" ? (showPassword ? "text" : "password") : type;
 
-
-
   return (
-    <div className="w-full min-w-0" className="w-full">
-      <label
-        htmlFor={name}
-        className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    <div className="w-full max-w-full flex flex-col box-border">
+      <label 
+        htmlFor={name} 
+        className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 text-left"
       >
-        {label}
+        {label} {required && <span className="text-rose-500">*</span>}
       </label>
-
-      <div className="relative w-full w-full min-w-0">
+      
+      <div className="relative w-full max-w-full flex items-center box-border">
         {icon && (
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
             <i className={icon}></i>
           </span>
         )}
@@ -72,9 +68,7 @@ const SSInput = <T extends FieldValues>({
   {...register(name, validation)}
 />
 
-
         <input
-          id={name}
   type={inputType}
   id={name}
   className={`block w-full max-w-full box-border pl-8 ${
@@ -87,45 +81,7 @@ const SSInput = <T extends FieldValues>({
   placeholder={placeholder}
   autoComplete={autoComplete}
   {...register(name, validation)}
-          className={`
-            w-full
-            min-w-0
-            rounded-xl
-            border
-            bg-white
-            dark:bg-slate-800
-            px-4
-            py-3
-            ${icon ? "pl-10" : ""}
-            ${type === "password" ? "pr-12" : ""}
-            text-sm
-            text-slate-900
-            dark:text-slate-100
-            placeholder:text-slate-400
-            transition-all
-            duration-200
-
-            ${
-              error
-                ? `
-                  border-red-500
-                  focus:border-red-500
-                  focus:ring-2
-                  focus:ring-red-500/20
-                `
-                : `
-                  border-slate-300
-                  dark:border-slate-700
-                  focus:border-indigo-500
-                  focus:ring-2
-                  focus:ring-indigo-500/20
-                `
-            }
-
-            focus:outline-none
-          `}
 />
-
         {type === "password" && (
   <button
     type="button"
@@ -138,17 +94,16 @@ const SSInput = <T extends FieldValues>({
     title={showPassword ? "Hide password" : "Show password"}
 
   >
-    <i
-              className={showPassword ? "fi fi-rr-eye" : "fi fi-rr-eye-crossed"}
-            />
+    <i className={showPassword ? "fi fi-rr-eye" : "fi fi-rr-eye-crossed"}></i>
   </button>
 )}
       </div>
+
       {error && (
-        <p className="text-red-400 text-sm mt-1 w-full break-words overflow-hidden">
-        {error.message}
+        <p className="text-xs font-medium text-rose-500 mt-1.5 text-left w-full break-words overflow-hidden">
+          {error.message}
         </p>
-    )}
+      )}
     </div>
   );
 };
